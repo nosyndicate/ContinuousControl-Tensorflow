@@ -88,9 +88,11 @@ class DDPG(object):
         self.soft_update_list = []
         with tf.name_scope("soft_update"):
             for source, dest in zip(self.critic['variables'], self.target_critic['variables']):
-                self.soft_update_list.append(dest.assign(tf.mul(source, tau) + tf.mul(dest, 1.0-tau)))
+                if 'BatchNorm' not in source.name:
+                    self.soft_update_list.append(dest.assign(tf.mul(source, tau) + tf.mul(dest, 1.0-tau)))
             for source, dest in zip(self.actor['variables'], self.target_actor['variables']):
-                self.soft_update_list.append(dest.assign(tf.mul(source, tau) + tf.mul(dest, 1.0-tau)))
+                if 'BatchNorm' not in source.name:
+                    self.soft_update_list.append(dest.assign(tf.mul(source, tau) + tf.mul(dest, 1.0-tau)))
 
         # after define the computation, we initialize all the varialbes
         self.session.run(tf.initialize_all_variables())

@@ -65,6 +65,8 @@ def main(_):
 
                 agent.learn(s, action, sprime, r, terminal)
 
+                #print 'reward is {}'.format(r)
+
                 s = sprime
 
                 if terminal:

@@ -29,7 +29,7 @@ class Normalization(object):
         scaled_action = np.clip(scaled_action, self.action_lb, self.action_ub)
 
 
-        return self.wrapped_env.step(action)
+        return self.wrapped_env.step(scaled_action)
 
 
     def reset(self):
