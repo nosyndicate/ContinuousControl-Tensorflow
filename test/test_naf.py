@@ -1,6 +1,6 @@
 import gym
 import logging
-import NAF
+from agents.NAF import NAF
 import numpy as np
 import tensorflow as tf
 import time
@@ -124,7 +124,7 @@ def main(_):
 
 
         # create the agent
-        agent = NAF.NAF(sess, env, state_dim, action_dim, 
+        agent = NAF(sess, env, state_dim, action_dim, 
             mini_batch_size=config['mini_batch_size'], max_buffer_size=config['max_buffer_size'], 
             update_per_iteration=config['update_per_iteration'], discount=config['discount'], batch_norm=config['batch_norm'],
             learning_rate=config['lr'],tau=config['soft_lr'],hidden_layers=config['hidden_layers'])
