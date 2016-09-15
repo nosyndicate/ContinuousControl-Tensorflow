@@ -4,5 +4,5 @@ Continuous Control Algorithms for Reinforcement Learning implemented using Tenso
 fully compatiable with OpenAI gym
 
 Implemented:
-- DDPG
-- NAF
+- DDPG (Deep Deterministic Policy Gradient)
+- NAF (Normalized Advantage Function)

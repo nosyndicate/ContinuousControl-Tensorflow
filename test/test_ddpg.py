@@ -1,6 +1,6 @@
 import gym
 import logging
-from agents.NAF import NAF
+from agents.DDPG import DDPG
 import numpy as np
 import tensorflow as tf
 import time
@@ -8,6 +8,7 @@ import pyprind
 from normalize_env import Normalization
 import ConfigParser
 import argparse
+
 
 def read_configuration(file):
     configParser = ConfigParser.SafeConfigParser()   
@@ -28,9 +29,11 @@ def read_configuration(file):
     config['max_episodes'] = configParser.getint('gym','max_episodes')
 
 
+
     # get the configuration for gpu
     config['gpu'] = configParser.getboolean('tensorflow','gpu')
     config['show_device_info'] = configParser.getboolean('tensorflow','show_device_info')
+
 
 
     # get the configuration for agent
@@ -39,7 +42,8 @@ def read_configuration(file):
     config['max_buffer_size'] = configParser.getint('agent','max_buffer_size')
     config['discount'] = configParser.getfloat('agent','discount')
     config['batch_norm'] = configParser.getboolean('agent','batch_norm')
-    config['lr'] = configParser.getfloat('agent','lr')
+    config['actor_lr'] = configParser.getfloat('agent','actor_lr')
+    config['critic_lr'] = configParser.getfloat('agent','critic_lr')
     config['soft_lr'] = configParser.getfloat('agent','soft_lr')
 
     layers = configParser.get('agent','hidden_layers')
@@ -78,26 +82,23 @@ def show_parameters(config):
     print 'max_buffer_size = {}'.format(config['max_buffer_size'])
     print 'discount = {}'.format(config['discount'])
     print 'batch_norm = {}'.format(config['batch_norm'])
-    print 'lr = {}'.format(config['lr'])
+    print 'actor_lr = {}'.format(config['actor_lr'])
+    print 'critic_lr = {}'.format(config['critic_lr'])
     print 'soft_lr = {}'.format(config['soft_lr'])
     print 'hidden_layers = {}'.format(config['hidden_layers'])
     print '==================== parameters ==================='
 
 
 
-
-
-
-
 def main(_):
-    
+
     # get the configuration from command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", help="indicates configuration file")
     args = parser.parse_args()
 
-    config_file = 'naf.cfg' if args.f is None else args.f
-
+    config_file = 'ddpg.cfg' if args.f is None else args.f
+    
     config = read_configuration(config_file)
 
     tf_config = configurate_tf(config)
@@ -116,16 +117,18 @@ def main(_):
             else:
                 env.monitor.start(config['monitor_dir'],force=True,video_callable=lambda count: False)
 
-        # NOTE: still not sure what's the meaning of shape
         state_dim = env.observation_space.shape[0]
         action_dim = env.action_space.shape[0]
 
 
+
         # create the agent
-        agent = NAF(sess, env, state_dim, action_dim, 
+        agent = DDPG(sess, env, state_dim, action_dim, 
             mini_batch_size=config['mini_batch_size'], max_buffer_size=config['max_buffer_size'], 
             update_per_iteration=config['update_per_iteration'], discount=config['discount'], batch_norm=config['batch_norm'],
-            learning_rate=config['lr'],tau=config['soft_lr'],hidden_layers=config['hidden_layers'])
+            actor_learning_rate=config['actor_lr'], critic_learning_rate=config['critic_lr'], tau=config['soft_lr'],
+            hidden_layers=config['hidden_layers'])
+
 
         start_time = time.time()
 
@@ -148,12 +151,15 @@ def main(_):
 
                 agent.learn(s, action, sprime, r, terminal)
 
+                #print 'reward is {}'.format(r)
+
                 s = sprime
 
                 if terminal:
                     # if we reach the terminal state, we restart the game
                     # however, before that, we may want to do something for to show the statistic
                     break
+
 
         elapsed_time = time.time() - start_time
 
