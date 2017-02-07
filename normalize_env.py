@@ -1,22 +1,21 @@
 import numpy as np
 from gym.spaces import Box
+from gym import Wrapper
 
-
-class Normalization(object):
+class Normalization(Wrapper):
     def __init__(self, env):
-        self.wrapped_env = env
+        super(Normalization, self).__init__(env)
 
         assert isinstance(env.action_space, Box)
 
-        self.action_lb = self.wrapped_env.action_space.low
-        self.action_ub = self.wrapped_env.action_space.high
+        self.action_lb = self.env.action_space.low
+        self.action_ub = self.env.action_space.high
 
 
-        self.monitor = self.wrapped_env.monitor
-        self.observation_space = self.wrapped_env.observation_space
+        self.observation_space = self.env.observation_space
 
         # redefine the action_space, so that all the action is with in the bound [-1,1]
-        bounds = np.ones(self.wrapped_env.action_space.shape)
+        bounds = np.ones(self.env.action_space.shape)
         self.action_space = Box(-1*bounds, bounds)
 
 
@@ -29,11 +28,7 @@ class Normalization(object):
         scaled_action = np.clip(scaled_action, self.action_lb, self.action_ub)
 
 
-        return self.wrapped_env.step(scaled_action)
+        return self.env.step(scaled_action)
 
 
-    def reset(self):
-        return self.wrapped_env.reset()
-
-    def render(self):
-        return self.wrapped_env.render()
+    
